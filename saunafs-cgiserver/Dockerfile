@@ -1,8 +1,13 @@
-FROM saunafs-base
+ARG BASE_IMAGE=saunafs-base
+FROM $BASE_IMAGE
+
+# SAUNAFS_VERSION: pin a specific version (e.g. "3.14.0") or leave empty for latest
+ARG SAUNAFS_VERSION=""
 
 # Install the specified SaunaFS package
 RUN apt-get update && \
-	apt-get install -y saunafs-cgiserv && \
+	PKG="saunafs-cgiserv${SAUNAFS_VERSION:+=$SAUNAFS_VERSION}" && \
+	apt-get install -y "$PKG" && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 

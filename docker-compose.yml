@@ -1,9 +1,39 @@
+x-saunafs-build-args: &saunafs-build-args
+  args:
+    BASE_IMAGE: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-base:${SAUNAFS_IMAGE_TAG:-latest}
+    SAUNAFS_VERSION: ${SAUNAFS_VERSION:-}
+
+# Image naming:
+#   SAUNAFS_REGISTRY  — registry + owner prefix (e.g. "ghcr.io/leil-io/saunafs-container")
+#                       leave unset for local builds (images named "saunafs-*")
+#   SAUNAFS_IMAGE_TAG — image tag (default: "latest")
+#   SAUNAFS_VERSION   — SaunaFS apt package version to install (default: latest available)
+#
+# Examples:
+#   docker compose --profile build build                                    # build all images incl. base
+#   SAUNAFS_VERSION=3.14.0 docker compose --profile build build            # pinned version
+#   docker compose up                                                       # start the cluster
+#   SAUNAFS_REGISTRY=ghcr.io/leil-io/saunafs-container docker compose push  # push to ghcr.io
+
 services:
+  # Build-only service: builds saunafs-base which all other images depend on.
+  # Not started by "docker compose up" (restricted to the "build" profile).
+  base:
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-base:${SAUNAFS_IMAGE_TAG:-latest}
+    build:
+      context: ./saunafs-base
+      args:
+        SAUNAFS_VERSION: ${SAUNAFS_VERSION:-}
+
+
   master:
-    image: saunafs-master
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-master:${SAUNAFS_IMAGE_TAG:-latest}
     container_name: "saunafs-master"
     build:
       context: ./saunafs-master
+      <<: *saunafs-build-args
+    depends_on:
+      - base
     ports:
       - "29421:9421"
     volumes:
@@ -14,36 +44,41 @@ services:
       - saunafsnet
 
   metalogger:
-    image: saunafs-metalogger
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-metalogger:${SAUNAFS_IMAGE_TAG:-latest}
     container_name: "saunafs-metalogger"
     build:
       context: ./saunafs-metalogger
+      <<: *saunafs-build-args
+    depends_on:
+      - base
     volumes:
       - ./volumes/saunafs-metalogger/etc/saunafs:/etc/saunafs/
       - ./volumes/saunafs-metalogger/var/lib/saunafs/:/var/lib/saunafs/
       - ./volumes/saunafs-metalogger/var/log/:/var/log/
-    depends_on:
-      - master
     networks:
       - saunafsnet
 
   cgi:
-    image: saunafs-cgiserver
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-cgiserver:${SAUNAFS_IMAGE_TAG:-latest}
     container_name: "saunafs-cgiserver"
     build:
       context: ./saunafs-cgiserver
+      <<: *saunafs-build-args
+    depends_on:
+      - base
     ports:
       - "29425:9425"
-    depends_on:
-      - master
     networks:
       - saunafsnet
 
   chunkserver01:
-    image: saunafs-chunkserver
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-chunkserver:${SAUNAFS_IMAGE_TAG:-latest}
     container_name: "saunafs-chunkserver01"
     build:
       context: ./saunafs-chunkserver
+      <<: *saunafs-build-args
+    depends_on:
+      - base
     volumes:
       - ./volumes/saunafs-chunkserver01/etc/saunafs:/etc/saunafs/
       - ./volumes/saunafs-chunkserver01/var/log/:/var/log/
@@ -52,16 +87,17 @@ services:
       - ./volumes/saunafs-chunkserver01/mnt/hdd002:/mnt/hdd002
     ports:
       - "29431:9422"
-    depends_on:
-      - master
     networks:
       - saunafsnet
 
   chunkserver02:
-    image: saunafs-chunkserver
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-chunkserver:${SAUNAFS_IMAGE_TAG:-latest}
     container_name: "saunafs-chunkserver02"
     build:
       context: ./saunafs-chunkserver
+      <<: *saunafs-build-args
+    depends_on:
+      - base
     volumes:
       - ./volumes/saunafs-chunkserver02/etc/saunafs:/etc/saunafs/
       - ./volumes/saunafs-chunkserver02/var/log/:/var/log/
@@ -70,16 +106,17 @@ services:
       - ./volumes/saunafs-chunkserver02/mnt/hdd002:/mnt/hdd002
     ports:
       - "29432:9422"
-    depends_on:
-      - master
     networks:
       - saunafsnet
 
   chunkserver03:
-    image: saunafs-chunkserver
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-chunkserver:${SAUNAFS_IMAGE_TAG:-latest}
     container_name: "saunafs-chunkserver03"
     build:
       context: ./saunafs-chunkserver
+      <<: *saunafs-build-args
+    depends_on:
+      - base
     volumes:
       - ./volumes/saunafs-chunkserver03/etc/saunafs:/etc/saunafs/
       - ./volumes/saunafs-chunkserver03/var/log/:/var/log/
@@ -89,13 +126,11 @@ services:
       - ./volumes/saunafs-chunkserver03/mnt/hdd003:/mnt/hdd003
     ports:
       - "29433:9422"
-    depends_on:
-      - master
     networks:
       - saunafsnet
 
   client:
-    image: saunafs-client
+    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-client:${SAUNAFS_IMAGE_TAG:-latest}
     container_name: "saunafs-client"
     devices:
       - /dev/fuse
@@ -105,9 +140,10 @@ services:
       - apparmor:unconfined
     build:
       context: ./saunafs-client
-    command: ["/mnt/saunafs", "-H", "master", "-P", "9421", "-S", "/"]
+      <<: *saunafs-build-args
     depends_on:
-      - master
+      - base
+    command: ["/mnt/saunafs", "-H", "master", "-P", "9421", "-S", "/"]
     volumes:
       - ./volumes/saunafs-client/var/log/:/var/log/
     networks:

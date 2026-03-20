@@ -9,6 +9,22 @@ This project was created for making fast DEMOs and playground purpose.
 
 **It should NOT be used for production data!**
 
+## Pre-built images (GitHub Packages)
+
+Images are automatically built and published to the GitHub Container Registry on every push to `main`
+and on every version tag (`v*.*.*`):
+
+```
+ghcr.io/leil-io/saunafs-container/saunafs-base
+ghcr.io/leil-io/saunafs-container/saunafs-master
+ghcr.io/leil-io/saunafs-container/saunafs-metalogger
+ghcr.io/leil-io/saunafs-container/saunafs-chunkserver
+ghcr.io/leil-io/saunafs-container/saunafs-cgiserver
+ghcr.io/leil-io/saunafs-container/saunafs-client
+```
+
+Available tags: tag follow git repository tags
+
 ## Requirements
 
 Project requires `docker` and `docker-compose`
@@ -29,20 +45,39 @@ Builds use the public SaunaFS APT repository and do not require credentials.
 ---
 
 ### Build and Run with Docker
+
 > **Note:**  
 > On some systems buildx docker plugin may need to be install prior following step. eg. ubuntu require
 > ```shell
 > sudo apt install -y docker-buildx
 > ```
 
+**Latest SaunaFS version (default):**
+
 ```shell
-# Build the shared base image (no credentials required)
+# Build the shared base image
 docker build \
   -f saunafs-base/Dockerfile \
   -t saunafs-base saunafs-base/
 
 # Build and start all services
 docker compose up --build
+```
+
+**Pinned SaunaFS version** (e.g. `5.7.1`):
+
+```shell
+# Build the shared base image with a pinned version
+docker build \
+  --build-arg SAUNAFS_VERSION=5.7.1 \
+  -f saunafs-base/Dockerfile \
+  -t saunafs-base saunafs-base/
+
+# Build all services with the same pinned version
+docker compose build \
+  --build-arg SAUNAFS_VERSION=5.7.1
+
+docker compose up
 ```
 
 ### Build and Run with Podman
@@ -58,6 +93,8 @@ podman build \
 # Build and start all services
 podman-compose up --build
 ```
+
+Pass `--build-arg SAUNAFS_VERSION=5.7.1` to both commands to pin a specific version.
 
 > **Note:**  
 > `docker compose` (v2) or `podman-compose` is recommended.

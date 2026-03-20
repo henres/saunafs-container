@@ -1,6 +1,10 @@
 ARG BASE_IMAGE=ubuntu:24.04
 FROM $BASE_IMAGE
-LABEL maintainer="contact@saunafs.com"
+
+# SAUNAFS_VERSION: pin a specific version (e.g. "3.14.0") or leave empty for latest
+ARG SAUNAFS_VERSION=""
+LABEL maintainer="contact@saunafs.com" \
+      org.opencontainers.image.source="https://github.com/leil-io/saunafs-container"
 
 # Install required packages
 RUN apt-get update && \
