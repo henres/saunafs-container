@@ -12,7 +12,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 jobs:
   # ── Step 1 : build saunafs-base ──────────────────────────────────────────
@@ -26,6 +25,7 @@ jobs:
     outputs:
       saunafs_version: ${{ steps.resolve.outputs.saunafs_version }}
       image_tag:       ${{ steps.resolve.outputs.image_tag }}
+      image_prefix:    ${{ steps.resolve.outputs.image_prefix }}
 
     steps:
       - name: Checkout repository
@@ -34,6 +34,10 @@ jobs:
       - name: Extract requested version from git tag
         id: version
         run: |
+          # ghcr.io requires lowercase image paths
+          IMAGE_PREFIX="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "image_prefix=${IMAGE_PREFIX}" >> "$GITHUB_OUTPUT"
+
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             # Strip leading "v" from the git tag (e.g. v5.7.1 → 5.7.1)
             echo "requested=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
@@ -78,6 +82,7 @@ jobs:
 
           echo "saunafs_version=${SAUNAFS_VERSION}" >> "$GITHUB_OUTPUT"
           echo "image_tag=${IMAGE_TAG}"             >> "$GITHUB_OUTPUT"
+          echo "image_prefix=${{ steps.version.outputs.image_prefix }}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         if: github.event_name != 'pull_request'
@@ -96,8 +101,9 @@ jobs:
           context: ./saunafs-base
           file: ./saunafs-base/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
+          provenance: false
           tags: |
-            ${{ env.IMAGE_PREFIX }}/saunafs-base:${{ steps.resolve.outputs.image_tag }}
+            ${{ steps.resolve.outputs.image_prefix }}/saunafs-base:${{ steps.resolve.outputs.image_tag }}
           build-args: |
             SAUNAFS_VERSION=${{ steps.resolve.outputs.saunafs_version }}
           cache-from: type=gha,scope=saunafs-base
@@ -143,10 +149,11 @@ jobs:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
+          provenance: false
           tags: |
-            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ needs.build-base.outputs.image_tag }}
+            ${{ needs.build-base.outputs.image_prefix }}/${{ matrix.service }}:${{ needs.build-base.outputs.image_tag }}
           build-args: |
-            BASE_IMAGE=${{ env.IMAGE_PREFIX }}/saunafs-base:${{ needs.build-base.outputs.image_tag }}
+            BASE_IMAGE=${{ needs.build-base.outputs.image_prefix }}/saunafs-base:${{ needs.build-base.outputs.image_tag }}
             SAUNAFS_VERSION=${{ needs.build-base.outputs.saunafs_version }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to:   type=gha,scope=${{ matrix.service }},mode=max
