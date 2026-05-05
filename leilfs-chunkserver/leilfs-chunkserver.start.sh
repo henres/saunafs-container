@@ -5,11 +5,11 @@ set -e # Exit immediately if a command exits with a non-zero status.
 TARGET_CONF_DIR="/etc/saunafs"
 DEFAULT_CONF_SRC_DIR="/usr/share/doc/saunafs-chunkserver/examples"
 TARGET_DATA_DIR="/var/lib/saunafs" # For chunkserver's own operational data/logs, if any
-SAUNAFS_USER="saunafs"
+LEILFS_USER="saunafs"
 
 CONFIGURED_HDD_PATHS=()
 
-echo "Ensuring SaunaFS Chunkserver directories and configurations..."
+echo "Ensuring LeilFS Chunkserver directories and configurations..."
 
 mkdir -p "${TARGET_CONF_DIR}"
 
@@ -19,7 +19,7 @@ if [ ! -f "${TARGET_CONF_DIR}/sfschunkserver.cfg" ]; then
 	if [ -f "${DEFAULT_CONF_SRC_DIR}/sfschunkserver.cfg" ]; then
 		cp -v "${DEFAULT_CONF_SRC_DIR}/sfschunkserver.cfg" "${TARGET_CONF_DIR}/sfschunkserver.cfg"
 	else
-		echo "ERROR: Default '${DEFAULT_CONF_SRC_DIR}/sfschunkserver.cfg' not found. Please check SaunaFS package installation."
+		echo "ERROR: Default '${DEFAULT_CONF_SRC_DIR}/sfschunkserver.cfg' not found. Please check LeilFS package installation."
 		exit 1
 	fi
 fi
@@ -86,22 +86,22 @@ cat "${TARGET_CONF_DIR}/sfshdd.cfg"
 
 mkdir -p "${TARGET_DATA_DIR}"
 
-echo "Setting final ownership for SaunaFS directories and HDD paths to '${SAUNAFS_USER}'..."
-chown -R "${SAUNAFS_USER}:${SAUNAFS_USER}" "${TARGET_CONF_DIR}"
-chown -R "${SAUNAFS_USER}:${SAUNAFS_USER}" "${TARGET_DATA_DIR}"
+echo "Setting final ownership for LeilFS directories and HDD paths to '${LEILFS_USER}'..."
+chown -R "${LEILFS_USER}:${LEILFS_USER}" "${TARGET_CONF_DIR}"
+chown -R "${LEILFS_USER}:${LEILFS_USER}" "${TARGET_DATA_DIR}"
 
 # Only chown paths that were actually configured and exist
 if [ ${#CONFIGURED_HDD_PATHS[@]} -gt 0 ]; then
 	for hdd_path in "${CONFIGURED_HDD_PATHS[@]}"; do
 		if [ -d "${hdd_path}" ]; then
-			chown -R "${SAUNAFS_USER}:${SAUNAFS_USER}" "${hdd_path}"
+			chown -R "${LEILFS_USER}:${LEILFS_USER}" "${hdd_path}"
 		else
 			echo "WARNING: HDD path '${hdd_path}' configured but directory does not exist. Skipping chown."
 		fi
 	done
 fi
 
-echo "Starting SaunaFS Chunkserver..."
-# Consider using su-exec to drop privileges to saunafs user if sfschunkserver doesn't do it itself
-# exec su-exec "${SAUNAFS_USER}" sfschunkserver -d -u
+echo "Starting LeilFS Chunkserver..."
+# Consider using su-exec to drop privileges to leilfs user if sfschunkserver doesn't do it itself
+# exec su-exec "${LEILFS_USER}" sfschunkserver -d -u
 exec sfschunkserver -d -u

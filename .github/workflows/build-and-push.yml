@@ -14,16 +14,16 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  # ── Step 1 : build saunafs-base ──────────────────────────────────────────
+  # ── Step 1 : build leilfs-base ──────────────────────────────────────────
   build-base:
-    name: Build saunafs-base
+    name: Build leilfs-base
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     outputs:
-      saunafs_version: ${{ steps.resolve.outputs.saunafs_version }}
+      leilfs_version: ${{ steps.resolve.outputs.leilfs_version }}
       image_tag:       ${{ steps.resolve.outputs.image_tag }}
       image_prefix:    ${{ steps.resolve.outputs.image_prefix }}
 
@@ -50,7 +50,7 @@ jobs:
         run: |
           REQUESTED="${{ steps.version.outputs.requested }}"
 
-          # Configure the SaunaFS apt repository on the runner
+          # Configure the LeilFS apt repository on the runner
           sudo apt-get install -y --no-install-recommends wget ca-certificates
           wget -qO- "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xA80B96E2C79457D4" \
             | sudo gpg --dearmor -o /usr/share/keyrings/saunafs-archive-keyring.gpg
@@ -80,7 +80,7 @@ jobs:
             IMAGE_TAG="${REQUESTED}"
           fi
 
-          echo "saunafs_version=${SAUNAFS_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "leilfs_version=${SAUNAFS_VERSION}" >> "$GITHUB_OUTPUT"
           echo "image_tag=${IMAGE_TAG}"             >> "$GITHUB_OUTPUT"
           echo "image_prefix=${{ steps.version.outputs.image_prefix }}" >> "$GITHUB_OUTPUT"
 
@@ -95,19 +95,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push saunafs-base
+      - name: Build and push leilfs-base
         uses: docker/build-push-action@v6
         with:
-          context: ./saunafs-base
-          file: ./saunafs-base/Dockerfile
+          context: ./leilfs-base
+          file: ./leilfs-base/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           tags: |
-            ${{ steps.resolve.outputs.image_prefix }}/saunafs-base:${{ steps.resolve.outputs.image_tag }}
+            ${{ steps.resolve.outputs.image_prefix }}/leilfs-base:${{ steps.resolve.outputs.image_tag }}
           build-args: |
-            SAUNAFS_VERSION=${{ steps.resolve.outputs.saunafs_version }}
-          cache-from: type=gha,scope=saunafs-base
-          cache-to:   type=gha,scope=saunafs-base,mode=max
+            SAUNAFS_VERSION=${{ steps.resolve.outputs.leilfs_version }}
+          cache-from: type=gha,scope=leilfs-base
+          cache-to:   type=gha,scope=leilfs-base,mode=max
 
   # ── Step 2 : build service images (parallel) ─────────────────────────────
   build-services:
@@ -122,11 +122,11 @@ jobs:
       fail-fast: false
       matrix:
         service:
-          - saunafs-master
-          - saunafs-metalogger
-          - saunafs-chunkserver
-          - saunafs-cgiserver
-          - saunafs-client
+          - leilfs-master
+          - leilfs-metalogger
+          - leilfs-chunkserver
+          - leilfs-cgiserver
+          - leilfs-client
 
     steps:
       - name: Checkout repository
@@ -153,7 +153,7 @@ jobs:
           tags: |
             ${{ needs.build-base.outputs.image_prefix }}/${{ matrix.service }}:${{ needs.build-base.outputs.image_tag }}
           build-args: |
-            BASE_IMAGE=${{ needs.build-base.outputs.image_prefix }}/saunafs-base:${{ needs.build-base.outputs.image_tag }}
-            SAUNAFS_VERSION=${{ needs.build-base.outputs.saunafs_version }}
+            BASE_IMAGE=${{ needs.build-base.outputs.image_prefix }}/leilfs-base:${{ needs.build-base.outputs.image_tag }}
+            SAUNAFS_VERSION=${{ needs.build-base.outputs.leilfs_version }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to:   type=gha,scope=${{ matrix.service }},mode=max

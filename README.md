@@ -1,7 +1,7 @@
-# saunafs-container
-Experimental container-based deployment cluster for [SaunaFS](https://github.com/leil-io/saunafs)
+# leilfs-container
+Experimental container-based deployment cluster for [LeilFS](https://github.com/leil-io/saunafs)
 
-The ultimate goal of this repository is to create all advantages of containers into SaunaFS project.
+The ultimate goal of this repository is to create all advantages of containers into LeilFS project.
 
 ## Warning - about testing and educational usage only
 
@@ -15,12 +15,12 @@ Images are automatically built and published to the GitHub Container Registry on
 and on every version tag (`v*.*.*`):
 
 ```
-ghcr.io/leil-io/saunafs-container/saunafs-base
-ghcr.io/leil-io/saunafs-container/saunafs-master
-ghcr.io/leil-io/saunafs-container/saunafs-metalogger
-ghcr.io/leil-io/saunafs-container/saunafs-chunkserver
-ghcr.io/leil-io/saunafs-container/saunafs-cgiserver
-ghcr.io/leil-io/saunafs-container/saunafs-client
+ghcr.io/leil-io/leilfs-container/leilfs-base
+ghcr.io/leil-io/leilfs-container/leilfs-master
+ghcr.io/leil-io/leilfs-container/leilfs-metalogger
+ghcr.io/leil-io/leilfs-container/leilfs-chunkserver
+ghcr.io/leil-io/leilfs-container/leilfs-cgiserver
+ghcr.io/leil-io/leilfs-container/leilfs-client
 ```
 
 Available tags: tag follow git repository tags
@@ -36,11 +36,11 @@ Also some (`1GB`) free space on hdd is recommended for efficient simulation of s
 Clone the repository:
 
 ```shell
-git clone https://github.com/leil-io/saunafs-container.git
-cd saunafs-container
+git clone https://github.com/leil-io/leilfs-container.git
+cd leilfs-container
 ```
 
-Builds use the public SaunaFS APT repository and do not require credentials.
+Builds use the public LeilFS APT repository and do not require credentials.
 
 ---
 
@@ -52,26 +52,26 @@ Builds use the public SaunaFS APT repository and do not require credentials.
 > sudo apt install -y docker-buildx
 > ```
 
-**Latest SaunaFS version (default):**
+**Latest LeilFS version (default):**
 
 ```shell
 # Build the shared base image
 docker build \
-  -f saunafs-base/Dockerfile \
-  -t saunafs-base saunafs-base/
+  -f leilfs-base/Dockerfile \
+  -t leilfs-base leilfs-base/
 
 # Build and start all services
 docker compose up --build
 ```
 
-**Pinned SaunaFS version** (e.g. `5.7.1`):
+**Pinned LeilFS version** (e.g. `5.7.1`):
 
 ```shell
 # Build the shared base image with a pinned version
 docker build \
   --build-arg SAUNAFS_VERSION=5.7.1 \
-  -f saunafs-base/Dockerfile \
-  -t saunafs-base saunafs-base/
+  -f leilfs-base/Dockerfile \
+  -t leilfs-base leilfs-base/
 
 # Build all services with the same pinned version
 docker compose build \
@@ -87,8 +87,8 @@ If you previously created a `./volumes` folder while using Docker, please delete
 ```shell
 # Build the shared base image (no credentials required)
 podman build \
-  -f saunafs-base/Dockerfile \
-  -t saunafs-base saunafs-base/
+  -f leilfs-base/Dockerfile \
+  -t leilfs-base leilfs-base/
 
 # Build and start all services
 podman-compose up --build
@@ -101,28 +101,28 @@ Pass `--build-arg SAUNAFS_VERSION=5.7.1` to both commands to pin a specific vers
 
 ---
 
-Visit [http://localhost:29425/sfs.cgi?masterhost=master&masterport=9421](http://localhost:29425/sfs.cgi?masterhost=master&masterport=9421) to access the SaunaFS CGI.
+Visit [http://localhost:29425/sfs.cgi?masterhost=master&masterport=9421](http://localhost:29425/sfs.cgi?masterhost=master&masterport=9421) to access the LeilFS CGI.
 
 ## Data Persistence and Initialization
 
 This Docker deployment is designed for ease of use and demonstration.
 - **No Pre-committed Data**: The `volumes/` directory is no longer part of this repository.
 - **Automatic Initialization**: On first startup, each service (master, metalogger, chunkservers) will automatically:
-    - Create necessary configuration files using defaults from the SaunaFS packages (found in `/usr/share/doc/saunafs-*/examples/` within the containers).
+    - Create necessary configuration files using defaults from the LeilFS packages (found in `/usr/share/doc/leilfs-*/examples/` within the containers).
     - Initialize their respective data directories.
-- **Persistent Data**: If you map Docker volumes to the standard SaunaFS data and configuration paths (e.g., `/var/lib/saunafs/`, `/etc/saunafs/`), your data and custom configurations will persist across container restarts. If these mapped volumes are empty on first start, they will be initialized as described above.
+- **Persistent Data**: If you map Docker volumes to the standard LeilFS data and configuration paths (e.g., `/var/lib/saunafs/`, `/etc/saunafs/`), your data and custom configurations will persist across container restarts. If these mapped volumes are empty on first start, they will be initialized as described above.
 - **Chunkserver Storage**:
     - Chunkservers will look for mount points at `/mnt/hdd001`, `/mnt/hdd002`, etc.
     - If you provide external volumes mounted to these paths in your `docker-compose.yml`, they will be used.
     - If these paths are not externally mounted, the startup script will create them as directories within the container (volatile storage) and issue a warning. This is suitable for testing but not for production data.
 
-This setup ensures that you can get a SaunaFS cluster running quickly without manual configuration steps, while still allowing for persistent storage and custom configurations when needed.
+This setup ensures that you can get a LeilFS cluster running quickly without manual configuration steps, while still allowing for persistent storage and custom configurations when needed.
 
 ## Cleaning Up Data
 
-If you have used Docker named volumes or host-mounted directories (e.g., by customizing `docker-compose.yml` to map local paths like `./volumes/master/data:/var/lib/saunafs`), your SaunaFS data will persist even after containers are stopped and removed.
+If you have used Docker named volumes or host-mounted directories (e.g., by customizing `docker-compose.yml` to map local paths like `./volumes/master/data:/var/lib/saunafs`), your LeilFS data will persist even after containers are stopped and removed.
 
-To completely reset the SaunaFS environment and start fresh, you will need to remove this persistent data. 
+To completely reset the LeilFS environment and start fresh, you will need to remove this persistent data. 
 
 - **If using Docker named volumes**: You can list them with `docker volume ls` and remove them with `docker volume rm <volume_name>`.
 - **If using host-mounted directories**: For example, if you created a local `volumes` directory in your project and mapped subdirectories from it (e.g., `volumes/master/data`, `volumes/chunkserver1/hdd001`, etc.), you would need to manually delete these local directories. 

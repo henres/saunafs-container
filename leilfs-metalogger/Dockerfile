@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=saunafs-base
+ARG BASE_IMAGE=leilfs-base
 FROM $BASE_IMAGE
 
 # SAUNAFS_VERSION: pin a specific version (e.g. "3.14.0") or leave empty for latest
@@ -10,7 +10,7 @@ RUN apt-get update && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
-COPY saunafs-metalogger.start.sh saunafs-metalogger.start.sh
-RUN chmod +x saunafs-metalogger.start.sh
+COPY leilfs-metalogger.start.sh leilfs-metalogger.start.sh
+RUN chmod +x leilfs-metalogger.start.sh
 
-CMD ["./saunafs-metalogger.start.sh"]
+CMD ["./leilfs-metalogger.start.sh"]

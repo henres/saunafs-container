@@ -1,137 +1,137 @@
-x-saunafs-build-args: &saunafs-build-args
+x-leilfs-build-args: &leilfs-build-args
   args:
-    BASE_IMAGE: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-base:${SAUNAFS_IMAGE_TAG:-latest}
+    BASE_IMAGE: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-base:${LEILFS_IMAGE_TAG:-latest}
     SAUNAFS_VERSION: ${SAUNAFS_VERSION:-}
 
 # Image naming:
-#   SAUNAFS_REGISTRY  — registry + owner prefix (e.g. "ghcr.io/leil-io/saunafs-container")
-#                       leave unset for local builds (images named "saunafs-*")
-#   SAUNAFS_IMAGE_TAG — image tag (default: "latest")
-#   SAUNAFS_VERSION   — SaunaFS apt package version to install (default: latest available)
+#   LEILFS_REGISTRY  — registry + owner prefix (e.g. "ghcr.io/leil-io/leilfs-container")
+#                       leave unset for local builds (images named "leilfs-*")
+#   LEILFS_IMAGE_TAG — image tag (default: "latest")
+#   SAUNAFS_VERSION   — LeilFS apt package version to install (default: latest available)
 #
 # Examples:
 #   docker compose --profile build build                                    # build all images incl. base
 #   SAUNAFS_VERSION=3.14.0 docker compose --profile build build            # pinned version
 #   docker compose up                                                       # start the cluster
-#   SAUNAFS_REGISTRY=ghcr.io/leil-io/saunafs-container docker compose push  # push to ghcr.io
+#   LEILFS_REGISTRY=ghcr.io/leil-io/leilfs-container docker compose push  # push to ghcr.io
 
 services:
-  # Build-only service: builds saunafs-base which all other images depend on.
+  # Build-only service: builds leilfs-base which all other images depend on.
   # Not started by "docker compose up" (restricted to the "build" profile).
   base:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-base:${SAUNAFS_IMAGE_TAG:-latest}
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-base:${LEILFS_IMAGE_TAG:-latest}
     build:
-      context: ./saunafs-base
+      context: ./leilfs-base
       args:
         SAUNAFS_VERSION: ${SAUNAFS_VERSION:-}
 
 
   master:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-master:${SAUNAFS_IMAGE_TAG:-latest}
-    container_name: "saunafs-master"
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-master:${LEILFS_IMAGE_TAG:-latest}
+    container_name: "leilfs-master"
     build:
-      context: ./saunafs-master
-      <<: *saunafs-build-args
+      context: ./leilfs-master
+      <<: *leilfs-build-args
     depends_on:
       - base
     ports:
       - "29421:9421"
     volumes:
-      - ./volumes/saunafs-master/etc/saunafs:/etc/saunafs/
-      - ./volumes/saunafs-master/var/lib/saunafs/:/var/lib/saunafs/
-      - ./volumes/saunafs-master/var/log/:/var/log/
+      - ./volumes/leilfs-master/etc/saunafs:/etc/saunafs/
+      - ./volumes/leilfs-master/var/lib/saunafs/:/var/lib/saunafs/
+      - ./volumes/leilfs-master/var/log/:/var/log/
     networks:
-      - saunafsnet
+      - leilfsnet
 
   metalogger:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-metalogger:${SAUNAFS_IMAGE_TAG:-latest}
-    container_name: "saunafs-metalogger"
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-metalogger:${LEILFS_IMAGE_TAG:-latest}
+    container_name: "leilfs-metalogger"
     build:
-      context: ./saunafs-metalogger
-      <<: *saunafs-build-args
+      context: ./leilfs-metalogger
+      <<: *leilfs-build-args
     depends_on:
       - base
     volumes:
-      - ./volumes/saunafs-metalogger/etc/saunafs:/etc/saunafs/
-      - ./volumes/saunafs-metalogger/var/lib/saunafs/:/var/lib/saunafs/
-      - ./volumes/saunafs-metalogger/var/log/:/var/log/
+      - ./volumes/leilfs-metalogger/etc/saunafs:/etc/saunafs/
+      - ./volumes/leilfs-metalogger/var/lib/saunafs/:/var/lib/saunafs/
+      - ./volumes/leilfs-metalogger/var/log/:/var/log/
     networks:
-      - saunafsnet
+      - leilfsnet
 
   cgi:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-cgiserver:${SAUNAFS_IMAGE_TAG:-latest}
-    container_name: "saunafs-cgiserver"
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-cgiserver:${LEILFS_IMAGE_TAG:-latest}
+    container_name: "leilfs-cgiserver"
     build:
-      context: ./saunafs-cgiserver
-      <<: *saunafs-build-args
+      context: ./leilfs-cgiserver
+      <<: *leilfs-build-args
     depends_on:
       - base
     ports:
       - "29425:9425"
     networks:
-      - saunafsnet
+      - leilfsnet
 
   chunkserver01:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-chunkserver:${SAUNAFS_IMAGE_TAG:-latest}
-    container_name: "saunafs-chunkserver01"
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-chunkserver:${LEILFS_IMAGE_TAG:-latest}
+    container_name: "leilfs-chunkserver01"
     build:
-      context: ./saunafs-chunkserver
-      <<: *saunafs-build-args
+      context: ./leilfs-chunkserver
+      <<: *leilfs-build-args
     depends_on:
       - base
     volumes:
-      - ./volumes/saunafs-chunkserver01/etc/saunafs:/etc/saunafs/
-      - ./volumes/saunafs-chunkserver01/var/log/:/var/log/
-      - ./volumes/saunafs-chunkserver01/var/lib/saunafs:/var/lib/saunafs
-      - ./volumes/saunafs-chunkserver01/mnt/hdd001:/mnt/hdd001
-      - ./volumes/saunafs-chunkserver01/mnt/hdd002:/mnt/hdd002
+      - ./volumes/leilfs-chunkserver01/etc/saunafs:/etc/saunafs/
+      - ./volumes/leilfs-chunkserver01/var/log/:/var/log/
+      - ./volumes/leilfs-chunkserver01/var/lib/saunafs:/var/lib/saunafs
+      - ./volumes/leilfs-chunkserver01/mnt/hdd001:/mnt/hdd001
+      - ./volumes/leilfs-chunkserver01/mnt/hdd002:/mnt/hdd002
     ports:
       - "29431:9422"
     networks:
-      - saunafsnet
+      - leilfsnet
 
   chunkserver02:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-chunkserver:${SAUNAFS_IMAGE_TAG:-latest}
-    container_name: "saunafs-chunkserver02"
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-chunkserver:${LEILFS_IMAGE_TAG:-latest}
+    container_name: "leilfs-chunkserver02"
     build:
-      context: ./saunafs-chunkserver
-      <<: *saunafs-build-args
+      context: ./leilfs-chunkserver
+      <<: *leilfs-build-args
     depends_on:
       - base
     volumes:
-      - ./volumes/saunafs-chunkserver02/etc/saunafs:/etc/saunafs/
-      - ./volumes/saunafs-chunkserver02/var/log/:/var/log/
-      - ./volumes/saunafs-chunkserver02/var/lib/saunafs:/var/lib/saunafs
-      - ./volumes/saunafs-chunkserver02/mnt/hdd001:/mnt/hdd001
-      - ./volumes/saunafs-chunkserver02/mnt/hdd002:/mnt/hdd002
+      - ./volumes/leilfs-chunkserver02/etc/saunafs:/etc/saunafs/
+      - ./volumes/leilfs-chunkserver02/var/log/:/var/log/
+      - ./volumes/leilfs-chunkserver02/var/lib/saunafs:/var/lib/saunafs
+      - ./volumes/leilfs-chunkserver02/mnt/hdd001:/mnt/hdd001
+      - ./volumes/leilfs-chunkserver02/mnt/hdd002:/mnt/hdd002
     ports:
       - "29432:9422"
     networks:
-      - saunafsnet
+      - leilfsnet
 
   chunkserver03:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-chunkserver:${SAUNAFS_IMAGE_TAG:-latest}
-    container_name: "saunafs-chunkserver03"
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-chunkserver:${LEILFS_IMAGE_TAG:-latest}
+    container_name: "leilfs-chunkserver03"
     build:
-      context: ./saunafs-chunkserver
-      <<: *saunafs-build-args
+      context: ./leilfs-chunkserver
+      <<: *leilfs-build-args
     depends_on:
       - base
     volumes:
-      - ./volumes/saunafs-chunkserver03/etc/saunafs:/etc/saunafs/
-      - ./volumes/saunafs-chunkserver03/var/log/:/var/log/
-      - ./volumes/saunafs-chunkserver03/var/lib/saunafs:/var/lib/saunafs
-      - ./volumes/saunafs-chunkserver03/mnt/hdd001:/mnt/hdd001
-      - ./volumes/saunafs-chunkserver03/mnt/hdd002:/mnt/hdd002
-      - ./volumes/saunafs-chunkserver03/mnt/hdd003:/mnt/hdd003
+      - ./volumes/leilfs-chunkserver03/etc/saunafs:/etc/saunafs/
+      - ./volumes/leilfs-chunkserver03/var/log/:/var/log/
+      - ./volumes/leilfs-chunkserver03/var/lib/saunafs:/var/lib/saunafs
+      - ./volumes/leilfs-chunkserver03/mnt/hdd001:/mnt/hdd001
+      - ./volumes/leilfs-chunkserver03/mnt/hdd002:/mnt/hdd002
+      - ./volumes/leilfs-chunkserver03/mnt/hdd003:/mnt/hdd003
     ports:
       - "29433:9422"
     networks:
-      - saunafsnet
+      - leilfsnet
 
   client:
-    image: ${SAUNAFS_REGISTRY:+${SAUNAFS_REGISTRY}/}saunafs-client:${SAUNAFS_IMAGE_TAG:-latest}
-    container_name: "saunafs-client"
+    image: ${LEILFS_REGISTRY:+${LEILFS_REGISTRY}/}leilfs-client:${LEILFS_IMAGE_TAG:-latest}
+    container_name: "leilfs-client"
     devices:
       - /dev/fuse
     cap_add:
@@ -139,16 +139,16 @@ services:
     security_opt:
       - apparmor:unconfined
     build:
-      context: ./saunafs-client
-      <<: *saunafs-build-args
+      context: ./leilfs-client
+      <<: *leilfs-build-args
     depends_on:
       - base
     command: ["/mnt/saunafs", "-H", "master", "-P", "9421", "-S", "/"]
     volumes:
-      - ./volumes/saunafs-client/var/log/:/var/log/
+      - ./volumes/leilfs-client/var/log/:/var/log/
     networks:
-      - saunafsnet
+      - leilfsnet
 
 networks:
-  saunafsnet:
+  leilfsnet:
     driver: bridge

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=saunafs-base
+ARG BASE_IMAGE=leilfs-base
 FROM $BASE_IMAGE
 
 # SAUNAFS_VERSION: pin a specific version (e.g. "3.14.0") or leave empty for latest
@@ -11,14 +11,14 @@ RUN apt-get update && \
 	rm -rf /var/lib/apt/lists/*
 
 # Define a non-volume-mapped path for templates
-ENV SAUNAFS_TEMPLATE_DIR=/opt/saunafs/templates
+ENV LEILFS_TEMPLATE_DIR=/opt/saunafs/templates
 
-RUN mkdir -p ${SAUNAFS_TEMPLATE_DIR} && \
-	cp /var/lib/saunafs/metadata.sfs.empty ${SAUNAFS_TEMPLATE_DIR}/metadata.sfs.empty
+RUN mkdir -p ${LEILFS_TEMPLATE_DIR} && \
+	cp /var/lib/saunafs/metadata.sfs.empty ${LEILFS_TEMPLATE_DIR}/metadata.sfs.empty
 
-COPY saunafs-master.start.sh /saunafs-master.start.sh
-RUN chmod +x /saunafs-master.start.sh
+COPY leilfs-master.start.sh /leilfs-master.start.sh
+RUN chmod +x /leilfs-master.start.sh
 
 EXPOSE 9419 9420 9421
 
-CMD ["/saunafs-master.start.sh"]
+CMD ["/leilfs-master.start.sh"]

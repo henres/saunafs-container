@@ -1,10 +1,10 @@
-# saunafs-container
+# leilfs-container
 
-Container image set for [SaunaFS](https://github.com/leil-io/saunafs):
+Container image set for [LeilFS](https://github.com/leil-io/saunafs):
 master, metalogger, chunkserver, cgiserver, client. Built from a shared
-`saunafs-base` Ubuntu image that pulls SaunaFS from the upstream APT
+`leilfs-base` Ubuntu image that pulls LeilFS from the upstream APT
 repository. Drives both a `docker compose` demo cluster and the
-images consumed by the `saunafs-operator` on Kubernetes.
+images consumed by the `leilfs-operator` on Kubernetes.
 
 > ⚠ For testing and educational use only. Not production-ready.
 
@@ -12,12 +12,12 @@ images consumed by the `saunafs-operator` on Kubernetes.
 
 ```
 docker-compose.yml          # demo cluster (master + chunkservers + …)
-saunafs-base/Dockerfile     # shared base: APT key + SaunaFS repo
-saunafs-master/             # master image + start script
-saunafs-metalogger/         # metalogger image + start script
-saunafs-chunkserver/        # chunkserver image + start script
-saunafs-cgiserver/          # CGI web UI image
-saunafs-client/             # FUSE client image (saunafs-mount)
+leilfs-base/Dockerfile     # shared base: APT key + LeilFS repo
+leilfs-master/             # master image + start script
+leilfs-metalogger/         # metalogger image + start script
+leilfs-chunkserver/        # chunkserver image + start script
+leilfs-cgiserver/          # CGI web UI image
+leilfs-client/             # FUSE client image (saunafs-mount)
 volumes/                    # local bind mounts for the demo cluster
 ```
 
@@ -30,12 +30,12 @@ arg.
 Published on every push to `main` and on every `v*.*.*` tag:
 
 ```
-ghcr.io/leil-io/saunafs-container/saunafs-base
-ghcr.io/leil-io/saunafs-container/saunafs-master
-ghcr.io/leil-io/saunafs-container/saunafs-metalogger
-ghcr.io/leil-io/saunafs-container/saunafs-chunkserver
-ghcr.io/leil-io/saunafs-container/saunafs-cgiserver
-ghcr.io/leil-io/saunafs-container/saunafs-client
+ghcr.io/leil-io/leilfs-container/leilfs-base
+ghcr.io/leil-io/leilfs-container/leilfs-master
+ghcr.io/leil-io/leilfs-container/leilfs-metalogger
+ghcr.io/leil-io/leilfs-container/leilfs-chunkserver
+ghcr.io/leil-io/leilfs-container/leilfs-cgiserver
+ghcr.io/leil-io/leilfs-container/leilfs-client
 ```
 
 Tag = git tag.
@@ -50,12 +50,12 @@ started by `docker compose up`.
 # Build everything (base first, then the rest)
 docker compose --profile build build
 
-# Pin a specific SaunaFS APT package version
+# Pin a specific LeilFS APT package version
 SAUNAFS_VERSION=5.9.0 docker compose --profile build build
 
 # Build into a custom registry namespace
-SAUNAFS_REGISTRY=ghcr.io/myorg/saunafs-container \
-SAUNAFS_IMAGE_TAG=dev \
+LEILFS_REGISTRY=ghcr.io/myorg/leilfs-container \
+LEILFS_IMAGE_TAG=dev \
   docker compose --profile build build
 ```
 
@@ -63,14 +63,14 @@ Three environment variables drive image naming and packaging:
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `SAUNAFS_REGISTRY` | Registry + owner prefix. Unset = local build (images named `saunafs-*` without prefix). | _unset_ |
-| `SAUNAFS_IMAGE_TAG` | Image tag. | `latest` |
-| `SAUNAFS_VERSION` | SaunaFS APT package version to install in the image. | _latest available_ |
+| `LEILFS_REGISTRY` | Registry + owner prefix. Unset = local build (images named `leilfs-*` without prefix). | _unset_ |
+| `LEILFS_IMAGE_TAG` | Image tag. | `latest` |
+| `SAUNAFS_VERSION` | LeilFS APT package version to install in the image. | _latest available_ |
 
 ## Push
 
 ```sh
-SAUNAFS_REGISTRY=ghcr.io/leil-io/saunafs-container docker compose push
+LEILFS_REGISTRY=ghcr.io/leil-io/leilfs-container docker compose push
 ```
 
 You must be logged in (`docker login ghcr.io`) with a token that has
@@ -88,11 +88,11 @@ master port mapped to `29421`. Persistent state is written to
 
 ## Image conventions
 
-- Base: `ubuntu:24.04`, SaunaFS APT key imported into
-  `/usr/share/keyrings/saunafs-archive-keyring.gpg`, then SaunaFS repo
+- Base: `ubuntu:24.04`, LeilFS APT key imported into
+  `/usr/share/keyrings/saunafs-archive-keyring.gpg`, then LeilFS repo
   added.
-- Each child image has a `saunafs-<role>.start.sh` that handles config
-  templating from environment variables and execs the SaunaFS daemon
+- Each child image has a `leilfs-<role>.start.sh` that handles config
+  templating from environment variables and execs the LeilFS daemon
   in the foreground.
 - `LABEL org.opencontainers.image.source` is set so GHCR links the
   image to this repo.
@@ -101,4 +101,4 @@ master port mapped to `29421`. Persistent state is written to
 
 Commit messages in this repo are free-form (no Conventional Commits
 contract). Keep them short and descriptive. Open issues / PRs against
-the upstream `leil-io/saunafs-container`.
+the upstream `leil-io/leilfs-container`.

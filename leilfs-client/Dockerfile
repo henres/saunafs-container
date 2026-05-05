@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=saunafs-base
+ARG BASE_IMAGE=leilfs-base
 FROM $BASE_IMAGE
 
 # SAUNAFS_VERSION: pin a specific version (e.g. "3.14.0") or leave empty for latest
@@ -11,7 +11,7 @@ RUN apt-get update && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
-COPY saunafs-client.start.sh saunafs-client.start.sh
-RUN chmod +x saunafs-client.start.sh
+COPY leilfs-client.start.sh leilfs-client.start.sh
+RUN chmod +x leilfs-client.start.sh
 
-ENTRYPOINT ["./saunafs-client.start.sh"]
+ENTRYPOINT ["./leilfs-client.start.sh"]

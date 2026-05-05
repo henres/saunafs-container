@@ -4,7 +4,7 @@ FROM $BASE_IMAGE
 # SAUNAFS_VERSION: pin a specific version (e.g. "3.14.0") or leave empty for latest
 ARG SAUNAFS_VERSION=""
 LABEL maintainer="contact@saunafs.com" \
-      org.opencontainers.image.source="https://github.com/leil-io/saunafs-container"
+      org.opencontainers.image.source="https://github.com/leil-io/leilfs-container"
 
 # Install required packages
 RUN apt-get update && \
@@ -22,5 +22,5 @@ RUN update-ca-certificates && \
 	--keyserver hkps://keyserver.ubuntu.com \
 	--receive-keys 0xA80B96E2C79457D4
 
-# Add SaunaFS APT repository (public access path); install per-child image as needed
+# Add LeilFS APT repository (public access path); install per-child image as needed
 RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/saunafs-archive-keyring.gpg] https://repo.saunafs.com/repository/saunafs-ubuntu-24.04/ noble main" > /etc/apt/sources.list.d/saunafs.list
